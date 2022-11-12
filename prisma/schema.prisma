@@ -21,7 +21,8 @@ model RaidHistory {
   raidRecordId Int      @id @default(autoincrement())
   score        Int
   enterTime    String
-  endTime      String
+  endTime      String?
+  limitTime    String
   createdAt    DateTime @default(now())
   userId       Int
 
