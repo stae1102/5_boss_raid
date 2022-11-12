@@ -19,4 +19,8 @@ export class UserRepository
   async onModuleDestroy() {
     await this.$disconnect();
   }
+
+  async create() {
+    return await this.user.create({ data: {}, select: { userId: true } });
+  }
 }
