@@ -5,10 +5,12 @@ import { RedisClientOptions } from 'redis';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RedisClientConfig } from './config/redis-client.config';
+import { PrismaModule } from './repository/prisma.module';
 import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
+    PrismaModule,
     ConfigModule.forRoot({ isGlobal: true }),
     CacheModule.registerAsync<Promise<RedisClientOptions>>(RedisClientConfig),
     UserModule,
