@@ -24,6 +24,7 @@ model RaidHistory {
   endTime      String?
   limitTime    String
   createdAt    DateTime @default(now())
+  level        Int
   userId       Int
 
   User User? @relation(fields: [userId], references: [userId])
