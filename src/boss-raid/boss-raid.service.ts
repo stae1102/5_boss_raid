@@ -63,6 +63,19 @@ export class BossRaidService {
     }
   }
 
+  async inquireBossRaid() {
+    const isInProgress: RaidHistory = await this.cacheManager.get(
+      'boss-raid-history',
+    );
+
+    if (isInProgress) {
+      const enteredUserId = isInProgress.userId;
+      return { canEnter: false, enteredUserId };
+    }
+
+    return { canEnter: true };
+  }
+
   private cacheBossRaidAndReturn = async () => {
     const bossRaidUrl = await this.configService.get('BOSSRAID_STATIC_DATA');
     const bossRaid: any = await firstValueFrom(
