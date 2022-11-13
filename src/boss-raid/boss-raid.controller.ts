@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { BossRaidService } from './boss-raid.service';
 import { EnterBossRaidDto } from './dto/enter-boss-raid.dto';
 
@@ -9,5 +9,10 @@ export class BossRaidController {
   @Post()
   async enterBossRaid(@Body() enterBossRaidDto: EnterBossRaidDto) {
     return this.bossRaidService.enterBossRaid(enterBossRaidDto);
+  }
+
+  @Get()
+  async inquireBossRaid() {
+    return this.bossRaidService.inquireBossRaid();
   }
 }
