@@ -19,4 +19,8 @@ export class RaidHistoryRepository
   async onModuleDestroy() {
     await this.$disconnect();
   }
+
+  async create(dataQuery) {
+    return await this.raidHistory.create(dataQuery);
+  }
 }

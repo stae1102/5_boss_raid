@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { RedisClientConfig } from './config/redis-client.config';
 import { PrismaModule } from './repository/prisma.module';
 import { UserModule } from './user/user.module';
+import { BossRaidModule } from './boss-raid/boss-raid.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UserModule } from './user/user.module';
     ConfigModule.forRoot({ isGlobal: true }),
     CacheModule.registerAsync<Promise<RedisClientOptions>>(RedisClientConfig),
     UserModule,
+    BossRaidModule,
   ],
   controllers: [AppController],
   providers: [
