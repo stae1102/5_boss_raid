@@ -57,6 +57,15 @@ export class BossRaidService {
           userId,
         },
       });
+      // cache-manager-redis-store에서 ttl이 적용되지 않아 임시로
+      // bossRaid 정적 데이터를 받아 기본 ttl 값을 정적 데이터의 시간으로 저장했습니다.
+      // 직접 ttl 문제를 해결하면서 겸사겸사 임시 해결 방안을 해당 패키지 이슈에 기록했습니다.
+      // https://github.com/dabroek/node-cache-manager-redis-store/issues/40
+      await this.cacheManager.set(
+        'boss-raid-history',
+        bossRaidHistory,
+        bossRaidLimitSeconds,
+      );
       return { isEntered: true, raidRecordId: bossRaidHistory.raidRecordId };
     } else {
       return { isEnterd: false };
