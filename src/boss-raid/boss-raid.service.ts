@@ -81,6 +81,8 @@ export class BossRaidService {
     const bossRaid: any = await firstValueFrom(
       this.httpService.get(bossRaidUrl),
     );
+    const bossRaidData = bossRaid.data.bossRaids[0];
+    await this.cacheManager.set('boss-raid', bossRaidData, 180);
     return bossRaid.data.bossRaids[0];
   };
 }
