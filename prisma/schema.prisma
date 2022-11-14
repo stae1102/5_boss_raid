@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["interactiveTransactions"] // 트랜잭션 사용
 }
 
 datasource db {
@@ -19,7 +20,7 @@ model User {
 
 model RaidHistory {
   raidRecordId Int      @id @default(autoincrement())
-  score        Int
+  score        Int      @default(0)
   enterTime    String
   endTime      String?
   limitTime    String
