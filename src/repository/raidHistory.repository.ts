@@ -1,5 +1,5 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class RaidHistoryRepository
@@ -22,5 +22,19 @@ export class RaidHistoryRepository
 
   async create(dataQuery) {
     return await this.raidHistory.create(dataQuery);
+  }
+
+  async findFirst(whereInput: Prisma.RaidHistoryWhereInput) {
+    return await this.raidHistory.findFirst({ where: whereInput });
+  }
+
+  async update(
+    dataInput: Prisma.RaidHistoryUpdateInput,
+    whereInput: Prisma.RaidHistoryWhereUniqueInput,
+  ) {
+    return await this.raidHistory.update({
+      data: dataInput,
+      where: whereInput,
+    });
   }
 }
