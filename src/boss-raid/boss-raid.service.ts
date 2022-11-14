@@ -50,7 +50,7 @@ export class BossRaidService {
       );
       bossRaidHistory = await this.raidHistoryRepository.create({
         data: {
-          score: bossRaidInfo.score,
+          // 스코어를 미리 저장하면 ttl로 인해 삭제될 때 레이드가 성공한 것으로 처리되므로 따로 저장하지 않음.
           enterTime: String(Date.now()),
           limitTime: String(Date.now() + bossRaidLimitSeconds),
           level: bossRaidInfo.level,
