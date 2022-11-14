@@ -692,9 +692,9 @@
     webpack "5.74.0"
     webpack-node-externals "3.0.0"
 
-"@nestjs/common@^9.0.0":
+"@nestjs/common@^9.2.0":
   version "9.2.0"
-  resolved "https://registry.npmjs.org/@nestjs/common/-/common-9.2.0.tgz"
+  resolved "https://registry.yarnpkg.com/@nestjs/common/-/common-9.2.0.tgz#fd4d9bab82ad2744fc37138993ac9336bfc78f50"
   integrity sha512-Ndcqak/ETYi+n1c5lFRPbxKLyUuM6DIOxcvfEFGfi0f6ad4dWDXRDx7z/n8V0l8+Y8djvvOHgf3t0e93w963Qg==
   dependencies:
     iterare "1.2.1"
@@ -1647,7 +1647,7 @@ bytes@3.1.2:
 
 cache-manager-redis-store@^3.0.1:
   version "3.0.1"
-  resolved "https://registry.npmjs.org/cache-manager-redis-store/-/cache-manager-redis-store-3.0.1.tgz"
+  resolved "https://registry.yarnpkg.com/cache-manager-redis-store/-/cache-manager-redis-store-3.0.1.tgz#8eeb211212763d04cef4058666182d624f714299"
   integrity sha512-o560kw+dFqusC9lQJhcm6L2F2fMKobJ5af+FoR2PdnMVdpQ3f3Bz6qzvObTGyvoazQJxjQNWgMQeChP4vRTuXQ==
   dependencies:
     redis "^4.3.1"
