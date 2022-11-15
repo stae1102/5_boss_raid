@@ -140,11 +140,31 @@ export class BossRaidService {
       const bossRaidLevelInfo = bossRaidData.levels.find(
         (data) => data.level === currentRaidLevel,
       );
-      const bossRaidScore = bossRaidLevelInfo.score;
+      let bossRaidScore = bossRaidLevelInfo.score;
 
       const endedBossRaidRecord = await this.raidHistoryRepository.update(
         { score: bossRaidScore },
         { raidRecordId },
+      );
+      // 4. 랭킹 리스트 조회/생성 및 해당 유저 랭킹 등록/수정
+      // 4-1. 랭킹 리스트 조회
+      const allRanking: number[] =
+        (await this.cacheManager.get('all_raid_ranking')) || [];
+      allRanking.push(userId);
+      await this.cacheManager.set('all_raid_ranking', allRanking, -1);
+
+      // 4-2. 해당 유저 랭킹 등록/수정
+      const myRankingInfo: Partial<RankingInfo> = await this.cacheManager.get(
+        `${userId}_raid`,
+      );
+      if (myRankingInfo) {
+        bossRaidScore += myRankingInfo.totalScore;
+      }
+      // 유저 랭킹 등록/수정
+      await this.cacheManager.set(
+        `${userId}_raid`,
+        { userId, totalScore: bossRaidScore },
+        -1,
       );
       return { updatedEndTime, endedBossRaidRecord };
     });
