@@ -85,6 +85,10 @@ export class BossRaidService {
     return { canEnter: true };
   }
 
+  /**
+   * 랭킹 결과를 계속 업데이트 하면서 캐싱 저장
+   * @param endBossRaid { userId, raidRecordId }
+   */
   async endBossRaid(endBossRaid: EndBossRaidDto) {
     // 캐시에서 불러오지 말고 내 DB에서 레이드 기록 불러오기
     // 1. Check userId & raidRecordId in Request Body
