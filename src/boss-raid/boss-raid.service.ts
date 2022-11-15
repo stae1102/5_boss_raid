@@ -45,8 +45,7 @@ export class BossRaidService {
     );
 
     if (!bossRaidHistory) {
-      // TODO 1. 보스레이드 정적 데이터 불러와서 제한 시간, 점수 가져오기
-      // TODO 2. 레이드 기록 데이터 저장
+      // TODO 레벨 검사 - dto에서 유효성 검사하기
       const bossRaidLimitSeconds = bossRaid.bossRaidLimitSeconds;
       const bossRaidInfo = bossRaid.levels.find((data) => data.level === level);
       bossRaidHistory = await this.raidHistoryRepository.create({
