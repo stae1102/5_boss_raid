@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RaidHistory } from '@prisma/client';
@@ -13,6 +14,8 @@ import { firstValueFrom } from 'rxjs';
 import { RaidHistoryRepository } from '../repository/raidHistory.repository';
 import { EndBossRaidDto } from './dto/end-boss-raid.dto';
 import { EnterBossRaidDto } from './dto/enter-boss-raid.dto';
+import { GetRankerDto } from './dto/get-ranker.dto';
+import { RankingInfo } from './interfaces/rankingInfo.interface';
 
 @Injectable()
 export class BossRaidService {
@@ -168,6 +171,52 @@ export class BossRaidService {
       );
       return { updatedEndTime, endedBossRaidRecord };
     });
+  }
+
+  /**
+   * 랭킹 조회 결과는 캐시에서 가져옴
+   * @param getRankerDto { userId }
+   */
+  async getRankerList(getRankerDto: GetRankerDto) {
+    // 1. 저장된 랭킹 리스트를 캐시에서 가져옵니다.
+    const { userId } = getRankerDto;
+    const allRanking: number[] = await this.cacheManager.get(
+      'all_raid_ranking',
+    );
+    if (!allRanking) {
+      throw new NotFoundException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: ['랭킹이 없습니다. 지금 도전해서 1등이 되어보세요!'],
+      });
+    }
+
+    // ! 이렇게 하니까 map, sort, map으로 O(3N)이 되어서
+    // ! 차라리 유저 테이블에 totalScore를 저장하는 방향도 좋아보임
+    const rankingListWithScore: Partial<RankingInfo>[] = await Promise.all(
+      allRanking.map(async (data: any) => {
+        const rankingInfo: Partial<RankingInfo> = await this.cacheManager.get(
+          `${data}_raid`,
+        );
+        return rankingInfo;
+      }),
+    );
+    console.log(rankingListWithScore);
+    const sortedRankingList = rankingListWithScore.sort((curr, next) => {
+      return (
+        +(curr.totalScore < next.totalScore) ||
+        +(curr.totalScore === next.totalScore) - 1
+      );
+    });
+
+    let i = 0;
+    const topRankerInfoList = await Promise.all(
+      sortedRankingList.map(async (data) => {
+        return Object.assign({ ranking: i++ }, data);
+      }),
+    );
+    const myRanking = topRankerInfoList.find((data) => data.userId === userId);
+
+    return { topRankerInfoList, myRanking };
   }
 
   private cacheBossRaidAndReturn = async () => {
