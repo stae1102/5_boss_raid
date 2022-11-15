@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RaidHistory } from '@prisma/client';
@@ -13,6 +14,8 @@ import { firstValueFrom } from 'rxjs';
 import { RaidHistoryRepository } from '../repository/raidHistory.repository';
 import { EndBossRaidDto } from './dto/end-boss-raid.dto';
 import { EnterBossRaidDto } from './dto/enter-boss-raid.dto';
+import { GetRankerDto } from './dto/get-ranker.dto';
+import { RankingInfo } from './interfaces/rankingInfo.interface';
 
 @Injectable()
 export class BossRaidService {
@@ -45,15 +48,14 @@ export class BossRaidService {
     );
 
     if (!bossRaidHistory) {
-      // TODO 1. 보스레이드 정적 데이터 불러와서 제한 시간, 점수 가져오기
-      // TODO 2. 레이드 기록 데이터 저장
+      // TODO 레벨 검사 - dto에서 유효성 검사하기
       const bossRaidLimitSeconds = bossRaid.bossRaidLimitSeconds;
       const bossRaidInfo = bossRaid.levels.find((data) => data.level === level);
       bossRaidHistory = await this.raidHistoryRepository.create({
         data: {
           // 스코어를 미리 저장하면 ttl로 인해 삭제될 때 레이드가 성공한 것으로 처리되므로 따로 저장하지 않음.
           enterTime: String(Date.now()),
-          limitTime: String(Date.now() + bossRaidLimitSeconds),
+          limitTime: String(Date.now() + bossRaidLimitSeconds * 1000),
           level: bossRaidInfo.level,
           userId,
         },
@@ -86,6 +88,10 @@ export class BossRaidService {
     return { canEnter: true };
   }
 
+  /**
+   * 랭킹 결과를 계속 업데이트 하면서 캐싱 저장
+   * @param endBossRaid { userId, raidRecordId }
+   */
   async endBossRaid(endBossRaid: EndBossRaidDto) {
     // 캐시에서 불러오지 말고 내 DB에서 레이드 기록 불러오기
     // 1. Check userId & raidRecordId in Request Body
@@ -137,14 +143,80 @@ export class BossRaidService {
       const bossRaidLevelInfo = bossRaidData.levels.find(
         (data) => data.level === currentRaidLevel,
       );
-      const bossRaidScore = bossRaidLevelInfo.score;
+      let bossRaidScore = bossRaidLevelInfo.score;
 
       const endedBossRaidRecord = await this.raidHistoryRepository.update(
         { score: bossRaidScore },
         { raidRecordId },
       );
+      // 4. 랭킹 리스트 조회/생성 및 해당 유저 랭킹 등록/수정
+      // 4-1. 랭킹 리스트 조회
+      const allRanking: number[] =
+        (await this.cacheManager.get('all_raid_ranking')) || [];
+      allRanking.push(userId);
+      await this.cacheManager.set('all_raid_ranking', allRanking, -1);
+
+      // 4-2. 해당 유저 랭킹 등록/수정
+      const myRankingInfo: Partial<RankingInfo> = await this.cacheManager.get(
+        `${userId}_raid`,
+      );
+      if (myRankingInfo) {
+        bossRaidScore += myRankingInfo.totalScore;
+      }
+      // 유저 랭킹 등록/수정
+      await this.cacheManager.set(
+        `${userId}_raid`,
+        { userId, totalScore: bossRaidScore },
+        -1,
+      );
       return { updatedEndTime, endedBossRaidRecord };
     });
+  }
+
+  /**
+   * 랭킹 조회 결과는 캐시에서 가져옴
+   * @param getRankerDto { userId }
+   */
+  async getRankerList(getRankerDto: GetRankerDto) {
+    // 1. 저장된 랭킹 리스트를 캐시에서 가져옵니다.
+    const { userId } = getRankerDto;
+    const allRanking: number[] = await this.cacheManager.get(
+      'all_raid_ranking',
+    );
+    if (!allRanking) {
+      throw new NotFoundException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: ['랭킹이 없습니다. 지금 도전해서 1등이 되어보세요!'],
+      });
+    }
+
+    // ! 이렇게 하니까 map, sort, map으로 O(3N)이 되어서
+    // ! 차라리 유저 테이블에 totalScore를 저장하는 방향도 좋아보임
+    const rankingListWithScore: Partial<RankingInfo>[] = await Promise.all(
+      allRanking.map(async (data: any) => {
+        const rankingInfo: Partial<RankingInfo> = await this.cacheManager.get(
+          `${data}_raid`,
+        );
+        return rankingInfo;
+      }),
+    );
+    console.log(rankingListWithScore);
+    const sortedRankingList = rankingListWithScore.sort((curr, next) => {
+      return (
+        +(curr.totalScore < next.totalScore) ||
+        +(curr.totalScore === next.totalScore) - 1
+      );
+    });
+
+    let i = 0;
+    const topRankerInfoList = await Promise.all(
+      sortedRankingList.map(async (data) => {
+        return Object.assign({ ranking: i++ }, data);
+      }),
+    );
+    const myRanking = topRankerInfoList.find((data) => data.userId === userId);
+
+    return { topRankerInfoList, myRanking };
   }
 
   private cacheBossRaidAndReturn = async () => {

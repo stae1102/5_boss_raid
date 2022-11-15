@@ -28,6 +28,10 @@ export class RaidHistoryRepository
     return await this.raidHistory.findFirst({ where: whereInput });
   }
 
+  async findMany(whereInput: Prisma.RaidHistoryWhereInput) {
+    return await this.raidHistory.findMany({ where: whereInput });
+  }
+
   async update(
     dataInput: Prisma.RaidHistoryUpdateInput,
     whereInput: Prisma.RaidHistoryWhereUniqueInput,
